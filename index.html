@@ -138,4 +138,87 @@
         score++;
         relatives.splice(i, 1);
         i--;
-      } else if (r.y > canvas.height)
+      } else if (r.y > canvas.height) {
+        missSound.play();
+        lives--;
+        relatives.splice(i, 1);
+        i--;
+      }
+    }
+
+    if (lives <= 0) {
+      document.getElementById("game-over").style.display = "block";
+      return;
+    }
+
+    if (Math.random() < 0.03) {
+      createRelative();
+    }
+
+    draw();
+    requestAnimationFrame(update);
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(playerImg, player.x, player.y, player.width, player.height);
+
+    for (let r of relatives) {
+      ctx.drawImage(r.image, r.x, r.y, r.width, r.height);
+    }
+
+    ctx.fillStyle = "black";
+    ctx.font = "24px Arial";
+    ctx.fillText("Score: " + score, 10, 30);
+    ctx.fillText("Lives: " + lives, 10, 60);
+  }
+
+  // Keyboard/TV remote controls
+  window.addEventListener("keydown", e => {
+    if (e.key === "ArrowLeft") {
+      player.dx = -player.speed;
+    } else if (e.key === "ArrowRight") {
+      player.dx = player.speed;
+    }
+  });
+  window.addEventListener("keyup", e => {
+    if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
+      player.dx = 0;
+    }
+  });
+
+  // Touch swipe controls
+  let touchStartX = null;
+  let touchActive = false;
+
+  window.addEventListener("touchstart", e => {
+    if (e.touches.length === 1) {
+      touchStartX = e.touches[0].clientX;
+      touchActive = true;
+    }
+  });
+
+  window.addEventListener("touchmove", e => {
+    if (!touchActive || e.touches.length !== 1) return;
+    const touchX = e.touches[0].clientX;
+    const deltaX = touchX - touchStartX;
+
+    if (deltaX > 20) {
+      player.dx = player.speed;
+    } else if (deltaX < -20) {
+      player.dx = -player.speed;
+    } else {
+      player.dx = 0;
+    }
+  });
+
+  window.addEventListener("touchend", e => {
+    player.dx = 0;
+    touchActive = false;
+    touchStartX = null;
+  });
+
+  update();
+</script>
+</body>
+</html>
