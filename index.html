@@ -6,8 +6,7 @@
   <title>Arvisha's Catch Game</title>
   <style>
     html, body {
-      margin: 0;
-      padding: 0;
+      margin: 0; padding: 0;
       background: #87CEEB;
       overflow: hidden;
       height: 100%;
@@ -15,7 +14,6 @@
       font-family: sans-serif;
       touch-action: none;
     }
-
     canvas {
       display: block;
       background: #fff;
@@ -23,7 +21,6 @@
       width: 100vw;
       height: 100vh;
     }
-
     #game-over {
       position: absolute;
       top: 40%;
@@ -37,41 +34,12 @@
       display: none;
       text-align: center;
     }
-
-    .touch-controls {
-      position: absolute;
-      bottom: 10px;
-      width: 100%;
-      display: flex;
-      justify-content: space-between;
-      z-index: 5;
-    }
-
-    .btn {
-      width: 50%;
-      height: 80px;
-      background: rgba(0, 0, 0, 0.3);
-      color: white;
-      font-size: 2em;
-      text-align: center;
-      line-height: 80px;
-      user-select: none;
-    }
-
-    .btn:active {
-      background: rgba(0, 0, 0, 0.5);
-    }
   </style>
 </head>
 <body>
 
 <canvas id="gameCanvas" width="720" height="1280"></canvas>
 <div id="game-over">Game Over!<br>Refresh to Play Again</div>
-
-<div class="touch-controls">
-  <div class="btn" id="leftBtn">←</div>
-  <div class="btn" id="rightBtn">→</div>
-</div>
 
 <script>
   const canvas = document.getElementById("gameCanvas");
@@ -88,7 +56,6 @@
       canvas.height = window.innerWidth / aspectRatio;
     }
   }
-
   resizeCanvas();
   window.addEventListener("resize", resizeCanvas);
 
@@ -184,39 +151,52 @@
     ctx.fillText("Lives: " + lives, 10, 60);
   }
 
-  // TV remote / keyboard
-  window.addEventListener("keydown", function(e) {
+  // Keyboard/TV remote controls
+  window.addEventListener("keydown", e => {
     if (e.key === "ArrowLeft") {
       player.dx = -player.speed;
     } else if (e.key === "ArrowRight") {
       player.dx = player.speed;
     }
   });
-
-  window.addEventListener("keyup", function(e) {
+  window.addEventListener("keyup", e => {
     if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
       player.dx = 0;
     }
   });
 
-  // Touch controls
-  const leftBtn = document.getElementById("leftBtn");
-  const rightBtn = document.getElementById("rightBtn");
+  // Touch swipe controls
+  let touchStartX = null;
+  let touchActive = false;
 
-  leftBtn.addEventListener("touchstart", () => {
-    player.dx = -player.speed;
-  });
-  rightBtn.addEventListener("touchstart", () => {
-    player.dx = player.speed;
-  });
-  leftBtn.addEventListener("touchend", () => {
-    player.dx = 0;
-  });
-  rightBtn.addEventListener("touchend", () => {
-    player.dx = 0;
+  window.addEventListener("touchstart", e => {
+    if (e.touches.length === 1) {
+      touchStartX = e.touches[0].clientX;
+      touchActive = true;
+    }
   });
 
-  // Start game
+  window.addEventListener("touchmove", e => {
+    if (!touchActive || e.touches.length !== 1) return;
+    const touchX = e.touches[0].clientX;
+    const deltaX = touchX - touchStartX;
+
+    // Threshold for starting movement
+    if (deltaX > 20) {
+      player.dx = player.speed;  // Move right
+    } else if (deltaX < -20) {
+      player.dx = -player.speed; // Move left
+    } else {
+      player.dx = 0; // No significant movement
+    }
+  });
+
+  window.addEventListener("touchend", e => {
+    player.dx = 0;
+    touchActive = false;
+    touchStartX = null;
+  });
+
   update();
 </script>
 </body>
