@@ -23,7 +23,6 @@
     display: block;
     background: #fff;
     margin: auto;
-    /* Use max to prevent stretching */
     max-width: 100vw;
     max-height: 100vh;
     width: 100vw;
@@ -55,7 +54,6 @@
   const canvas = document.getElementById("gameCanvas");
   const ctx = canvas.getContext("2d");
 
-  // Desired aspect ratio 9:16 (width:height)
   const ASPECT_RATIO = 9 / 16;
 
   function resizeCanvas() {
@@ -64,11 +62,9 @@
     const windowRatio = vw / vh;
 
     if (windowRatio > ASPECT_RATIO) {
-      // Window is wider than desired ratio — base on height
       canvas.height = vh;
       canvas.width = vh * ASPECT_RATIO;
     } else {
-      // Window is taller or equal — base on width
       canvas.width = vw;
       canvas.height = vw / ASPECT_RATIO;
     }
@@ -115,7 +111,7 @@
   }
 
   function update() {
-    // Initialize player position on first frame
+    // Set initial player position if not set yet
     if (player.x === 0 && player.y === 0) {
       player.x = canvas.width / 2 - player.width / 2;
       player.y = canvas.height - 180;
@@ -187,38 +183,41 @@
     }
   });
 
-  // Touch swipe controls
-  let touchStartX = null;
-  let touchActive = false;
+  // Touch drag controls
+  let lastTouchX = null;
 
   window.addEventListener("touchstart", e => {
     if (e.touches.length === 1) {
-      touchStartX = e.touches[0].clientX;
-      touchActive = true;
-    }
-  });
-
-  window.addEventListener("touchmove", e => {
-    if (!touchActive || e.touches.length !== 1) return;
-    const touchX = e.touches[0].clientX;
-    const deltaX = touchX - touchStartX;
-
-    if (deltaX > 20) {
-      player.dx = player.speed;
-    } else if (deltaX < -20) {
-      player.dx = -player.speed;
-    } else {
+      lastTouchX = e.touches[0].clientX;
       player.dx = 0;
     }
   });
 
+  window.addEventListener("touchmove", e => {
+    if (e.touches.length !== 1) return;
+
+    const touchX = e.touches[0].clientX;
+    const deltaX = touchX - lastTouchX;
+    lastTouchX = touchX;
+
+    // Translate finger drag delta to player dx
+    // Normalize and clamp speed for smooth movement
+    const maxSpeed = player.speed;
+    let speed = deltaX * 0.5; // sensitivity factor
+
+    if (speed > maxSpeed) speed = maxSpeed;
+    if (speed < -maxSpeed) speed = -maxSpeed;
+
+    player.dx = speed;
+  });
+
   window.addEventListener("touchend", e => {
     player.dx = 0;
-    touchActive = false;
-    touchStartX = null;
+    lastTouchX = null;
   });
 
   update();
 </script>
+
 </body>
 </html>
