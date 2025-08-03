@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 <title>Arvisha's Catch Game</title>
 <style>
-  /* Reset & base */
   html, body {
     margin: 0; padding: 0;
     height: 100%; width: 100%;
@@ -13,10 +12,10 @@
     overflow: hidden;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
       Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
-    -webkit-touch-callout: none; /* iOS Safari */
+    -webkit-touch-callout: none;
     -webkit-user-select: none;
     -webkit-overflow-scrolling: touch;
-    touch-action: none; /* Disable default gestures */
+    touch-action: none;
   }
 
   canvas {
@@ -58,166 +57,3 @@
 
   function resizeCanvas() {
     const vw = window.innerWidth;
-    const vh = window.innerHeight;
-    const windowRatio = vw / vh;
-
-    if (windowRatio > ASPECT_RATIO) {
-      canvas.height = vh;
-      canvas.width = vh * ASPECT_RATIO;
-    } else {
-      canvas.width = vw;
-      canvas.height = vw / ASPECT_RATIO;
-    }
-  }
-
-  resizeCanvas();
-  window.addEventListener("resize", resizeCanvas);
-
-  const playerImg = new Image();
-  playerImg.src = "arvisha.png";
-
-  const relativeImages = [];
-  for (let i = 1; i <= 17; i++) {
-    const img = new Image();
-    img.src = `relative${i}.png`;
-    relativeImages.push(img);
-  }
-
-  const catchSound = new Audio("catch.mp3");
-  const missSound = new Audio("miss.mp3");
-
-  const player = {
-    x: 0, y: 0,
-    width: 130, height: 160,
-    speed: 8,
-    dx: 0
-  };
-
-  let relatives = [];
-  let score = 0;
-  let lives = 3;
-
-  function createRelative() {
-    if (relatives.length >= 6) return;
-    const newX = Math.random() * (canvas.width - 90);
-    relatives.push({
-      x: newX,
-      y: -90,
-      width: 90,
-      height: 90,
-      speed: 2.5 + Math.random(),
-      image: relativeImages[Math.floor(Math.random() * relativeImages.length)]
-    });
-  }
-
-  function update() {
-    // Set initial player position if not set yet
-    if (player.x === 0 && player.y === 0) {
-      player.x = canvas.width / 2 - player.width / 2;
-      player.y = canvas.height - 180;
-    }
-
-    player.x += player.dx;
-    player.x = Math.max(0, Math.min(canvas.width - player.width, player.x));
-
-    for (let i = 0; i < relatives.length; i++) {
-      let r = relatives[i];
-      r.y += r.speed;
-
-      if (
-        r.x < player.x + player.width &&
-        r.x + r.width > player.x &&
-        r.y < player.y + player.height &&
-        r.y + r.height > player.y
-      ) {
-        catchSound.play();
-        score++;
-        relatives.splice(i, 1);
-        i--;
-      } else if (r.y > canvas.height) {
-        missSound.play();
-        lives--;
-        relatives.splice(i, 1);
-        i--;
-      }
-    }
-
-    if (lives <= 0) {
-      document.getElementById("game-over").style.display = "block";
-      return;
-    }
-
-    if (Math.random() < 0.03) {
-      createRelative();
-    }
-
-    draw();
-    requestAnimationFrame(update);
-  }
-
-  function draw() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.drawImage(playerImg, player.x, player.y, player.width, player.height);
-
-    for (let r of relatives) {
-      ctx.drawImage(r.image, r.x, r.y, r.width, r.height);
-    }
-
-    ctx.fillStyle = "black";
-    ctx.font = "24px Arial";
-    ctx.fillText("Score: " + score, 10, 30);
-    ctx.fillText("Lives: " + lives, 10, 60);
-  }
-
-  // Keyboard/TV remote controls
-  window.addEventListener("keydown", e => {
-    if (e.key === "ArrowLeft") {
-      player.dx = -player.speed;
-    } else if (e.key === "ArrowRight") {
-      player.dx = player.speed;
-    }
-  });
-  window.addEventListener("keyup", e => {
-    if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
-      player.dx = 0;
-    }
-  });
-
-  // Touch drag controls
-  let lastTouchX = null;
-
-  window.addEventListener("touchstart", e => {
-    if (e.touches.length === 1) {
-      lastTouchX = e.touches[0].clientX;
-      player.dx = 0;
-    }
-  });
-
-  window.addEventListener("touchmove", e => {
-    if (e.touches.length !== 1) return;
-
-    const touchX = e.touches[0].clientX;
-    const deltaX = touchX - lastTouchX;
-    lastTouchX = touchX;
-
-    // Translate finger drag delta to player dx
-    // Normalize and clamp speed for smooth movement
-    const maxSpeed = player.speed;
-    let speed = deltaX * 0.5; // sensitivity factor
-
-    if (speed > maxSpeed) speed = maxSpeed;
-    if (speed < -maxSpeed) speed = -maxSpeed;
-
-    player.dx = speed;
-  });
-
-  window.addEventListener("touchend", e => {
-    player.dx = 0;
-    lastTouchX = null;
-  });
-
-  update();
-</script>
-
-</body>
-</html>
